@@ -1,0 +1,55 @@
+diff --git a/node_modules/node-fetch/lib/index.js b/node_modules/node-fetch/lib/index.js
+index 087f2a0..923e784 100644
+--- a/node_modules/node-fetch/lib/index.js
++++ b/node_modules/node-fetch/lib/index.js
+@@ -1730,25 +1730,50 @@ function fetch(url, opts) {
+ 		writeToStream(req, request);
+ 	});
+ }
++
++const requestMap = new Map();
++let requestId = 0;
++const socketMap = new Map();
++let socketId = 0;
++const responseMap = new Map();
++let responseId = 0;
++
+ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
+ 	let socket;
+ 
++	console.log('>>> request', requestMap.has(request) ? requestMap.get(request) : (() => {
++        requestMap.set(request, requestId);
++        return requestId++
++    })(), ': start');
++
+ 	request.on('socket', function (s) {
+ 		socket = s;
++		console.log('>>> request', requestMap.get(request), ': using socket', socketMap.has(socket) ? socketMap.get(socket) : (() => {
++			socketMap.set(socket, socketId);
++			return socketId++
++		})());
+ 	});
+ 
+ 	request.on('response', function (response) {
++		console.log('>>> request', requestMap.get(request), ': got response', responseMap.has(response) ? responseMap.get(response) : (() => {
++			responseMap.set(response, responseId);
++			return responseId++
++		})());
+ 		const headers = response.headers;
+ 
+ 		if (headers['transfer-encoding'] === 'chunked' && !headers['content-length']) {
++			console.log('>>>>>> IS CHUNKED');
+ 			response.once('close', function (hadError) {
++				console.log('>>> request', requestMap.get(request), ': close event for socket', socketMap.get(socket));
+ 				// tests for socket presence, as in some situations the
+ 				// the 'socket' event is not triggered for the request
+ 				// (happens in deno), avoids `TypeError`
+ 				// if a data listener is still present we didn't end cleanly
+ 				const hasDataListener = socket && socket.listenerCount('data') > 0;
++				console.log('>>>>>> listener count', socket && socket.listenerCount('data'));
+ 
+ 				if (hasDataListener && !hadError) {
++					console.log('>>>>>> \u{1f480} premature close \u{1f480}');
+ 					const err = new Error('Premature close');
+ 					err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+ 					errorCallback(err);

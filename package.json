@@ -1,0 +1,20 @@
+{
+  "name": "repro-node-fetch-premature-close-with-agent",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "patch-package",
+    "start": "ts-node index.ts"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "2.6.12"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "2.6.4",
+    "patch-package": "^8.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}
